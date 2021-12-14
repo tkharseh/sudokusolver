@@ -1,12 +1,21 @@
-board = [[7, 8, 0, 4, 0, 0, 1, 2, 0],
-         [6, 0, 0, 0, 7, 5, 0, 0, 9],
-         [0, 0, 0, 6, 0, 1, 0, 7, 8],
-         [0, 0, 7, 0, 4, 0, 2, 6, 0],
-         [0, 0, 1, 0, 5, 0, 9, 3, 0],
-         [9, 0, 4, 0, 6, 0, 0, 0, 5],
-         [0, 7, 0, 3, 0, 0, 0, 1, 2],
-         [1, 2, 0, 0, 0, 7, 4, 0, 0],
-         [0, 4, 9, 2, 0, 6, 0, 0, 7]]
+import pyautogui as pyg
+import time
+import numpy as np
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+
+
+board1 = [[6, 9, 0, 4, 0, 5, 0, 7, 0],
+         [0, 0, 4, 9, 0, 0, 0, 0, 1],
+         [8, 0, 5, 7, 6, 0, 4, 2, 9],
+         [0, 4, 6, 1, 0, 0, 0, 3, 2],
+         [0, 0, 0, 0, 9, 0, 0, 0, 5],
+         [5, 0, 3, 2, 8, 4, 0, 0, 6],
+         [3, 5, 1, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 8, 3, 0, 2, 5, 0],
+         [2, 8, 0, 0, 0, 0, 6, 0, 0]]
 
 
 def print_board(board):
@@ -34,8 +43,9 @@ def find_empty(board):
 
 def valid_move(board, num, position):
     # Check for duplicates in row:
-    if board[position[0]].count(num) > 1:
-        return False
+    for i in range(len(board[0])):
+        if board[position[0]][i] == num and i != position[1]:
+            return False
 
     # Check for duplicates in column:
     for i in range(len(board)):
@@ -69,7 +79,56 @@ def solve(board):
         return False
 
 
-print_board(board)
-solve(board)
-print('Solved:')
-print_board(board)
+def input_values(board):
+    str_vals = [str(num) for row in board for num in row]
+    print(str_vals)
+    # for i, str_val in enumerate(str_vals):
+    #     if (i + 1) % 9 == 0:
+    #         pyg.press(str_val)
+    #         pyg.press('down')
+    #         pyg.press('left')
+    #         pyg.press('left')
+    #         pyg.press('left')
+    #         pyg.press('left')
+    #         pyg.press('left')
+    #         pyg.press('left')
+    #         pyg.press('left')
+    #         pyg.press('left')
+    #     else:
+    #         pyg.press(str_val)
+    #         pyg.press('right')
+
+def main():
+    # Read sudoku board
+    sudoku_matrix = np.zeros((9, 9)).astype(int)
+    chrome_path = r'/Users/tariqkharseh/Desktop/chromedriver'
+    driver = webdriver.Chrome(chrome_path)
+    driver.get('https://nine.websudoku.com/?level=4')
+    time.sleep(3)
+
+    board = []
+    blank_idxs = []
+    for row_idx in range(9):
+        row = []
+        for col_idx in range(9):
+            element = driver.find_element(By.XPATH, '//*[@id="f{}{}"]'.format(col_idx, row_idx)).get_attribute('value')
+            if element == '':
+                row.append(0)
+                blank_idx = str(col_idx) + str(row_idx)
+                blank_idxs.append(blank_idx)
+            else:
+                row.append(int(element))
+        board.append(row)
+
+    solve(board)
+
+    for idx in blank_idxs:
+        col, row = idx[0], idx[1]
+        blank_box = driver.find_element(By.XPATH, '//*[@id="f{}{}"]'.format(col, row))
+        blank_box.send_keys(board[int(row)][int(col)])
+    time.sleep(2)
+    button = driver.find_element(By.XPATH, '/html/body/table/tbody/tr/td[3]/table/tbody/tr[2]/td/form/p[4]/input[1]')
+    button.click()
+    time.sleep(15)
+
+main()
