@@ -1,36 +1,6 @@
-import pyautogui as pyg
 import time
-import numpy as np
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-
-
-
-board1 = [[6, 9, 0, 4, 0, 5, 0, 7, 0],
-         [0, 0, 4, 9, 0, 0, 0, 0, 1],
-         [8, 0, 5, 7, 6, 0, 4, 2, 9],
-         [0, 4, 6, 1, 0, 0, 0, 3, 2],
-         [0, 0, 0, 0, 9, 0, 0, 0, 5],
-         [5, 0, 3, 2, 8, 4, 0, 0, 6],
-         [3, 5, 1, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 8, 3, 0, 2, 5, 0],
-         [2, 8, 0, 0, 0, 0, 6, 0, 0]]
-
-
-def print_board(board):
-    for i in range(len(board)):
-        if i % 3 == 0 and i != 0:
-            print("- - - - - - - - - - - - - ")
-
-        for j in range(len(board[0])):
-            if j % 3 == 0 and j != 0:
-                print(" | ", end="")
-
-            if j == 8:
-                print(board[i][j])
-            else:
-                print(str(board[i][j]) + " ", end="")
 
 
 def find_empty(board):
@@ -79,33 +49,14 @@ def solve(board):
         return False
 
 
-def input_values(board):
-    str_vals = [str(num) for row in board for num in row]
-    print(str_vals)
-    # for i, str_val in enumerate(str_vals):
-    #     if (i + 1) % 9 == 0:
-    #         pyg.press(str_val)
-    #         pyg.press('down')
-    #         pyg.press('left')
-    #         pyg.press('left')
-    #         pyg.press('left')
-    #         pyg.press('left')
-    #         pyg.press('left')
-    #         pyg.press('left')
-    #         pyg.press('left')
-    #         pyg.press('left')
-    #     else:
-    #         pyg.press(str_val)
-    #         pyg.press('right')
-
 def main():
-    # Read sudoku board
-    sudoku_matrix = np.zeros((9, 9)).astype(int)
+    # Open website
     chrome_path = r'/Users/tariqkharseh/Desktop/chromedriver'
     driver = webdriver.Chrome(chrome_path)
     driver.get('https://nine.websudoku.com/?level=4')
     time.sleep(3)
 
+    # Make board and read values from website
     board = []
     blank_idxs = []
     for row_idx in range(9):
@@ -120,15 +71,21 @@ def main():
                 row.append(int(element))
         board.append(row)
 
+    # Solve board
     solve(board)
 
+    # Fill in solved values on website
     for idx in blank_idxs:
         col, row = idx[0], idx[1]
         blank_box = driver.find_element(By.XPATH, '//*[@id="f{}{}"]'.format(col, row))
         blank_box.send_keys(board[int(row)][int(col)])
     time.sleep(2)
+
+    # Submit solution
     button = driver.find_element(By.XPATH, '/html/body/table/tbody/tr/td[3]/table/tbody/tr[2]/td/form/p[4]/input[1]')
     button.click()
     time.sleep(15)
 
-main()
+
+if __name__ == '__main__':
+    main()
